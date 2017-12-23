@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel='stylesheet' href='bulma.css' />
+                <style>
+/* Some CSS styling */
+#sketchpadapp {
+    /* Prevent nearby text being highlighted when accidentally dragging mouse outside confines of the canvas */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.leftside {
+    float:left;
+    width:220px;
+    height:285px;
+    background-color:#def;
+    padding:10px;
+    border-radius:4px;
+}
+.rightside {
+    float:left;
+    margin-left:10px;
+}
+#sketchpad {
+    float:left;
+    height:300px;
+    width:400px;
+    border:2px solid #888;
+    border-radius:4px;
+    position:relative; /* Necessary for correct mouse co-ords in Firefox */
+}
+#clearbutton {
+    font-size: 15px;
+    padding: 10px;
+    -webkit-appearance: none;
+    background: #eee;
+    border: 1px solid #888;
+}
+</style>
+    </head>
+    <body>
+        
+        <progress class="progress is-large is-info" value="100" max="100"></progress>
+        
+        <h1 class="drawwhat"></h1>
+        
+        <div id="sketchpadapp">
+            <div class="leftside">
+                 <button class="roundtest button is-light is-large">Start</button>
+            </div>
+            <div class="rightside">
+                <p class="player1Reveal"></p>
+                <canvas id="sketchpad1" height="300" width="400"></canvas>
+                <p class="player2Reveal"></p>
+                <canvas id="sketchpad2" height="300" width="400"></canvas>
+            </div>
+        </div>
+        
+        <script src="/socket.io/socket.io.js"></script>
+        
+        <script type="text/javascript">
+    
+            var socket = io();
+             var canvas1,ctx1, canvas2,ctx2;
+             
+            let progress = document.querySelector('progress')
+            
+            socket.on('drawing', onDrawingEvent);
+            socket.on('whatToDraw', (data) => {
+                document.querySelector('.drawwhat').innerHTML = data.whatToDraw 
+                progress.value = 100;
+                updateProgressBar(data)
+            });
+            
+            socket.on('votenow', (data) => {
+                document.querySelector('.drawwhat').innerHTML = "vote now!" 
+                progress.value = 100;
+                updateProgressBar(data)
+                revealPlayers(data)
+            });
+            
+            socket.on('rounddone', (data) => {
+                document.querySelector('.drawwhat').innerHTML = "Round over" 
+                progress.value = 100;
+                updateProgressBar(data)
+            });
+            
+            
+             socket.on('gamedone', (data) => {
+                document.querySelector('.drawwhat').innerHTML = "Game over" 
+                
+            });
+            
+            
+             window.addEventListener('load', ()=> {
+                 init()
+                socket.emit('host');               
+            })
+            
+            function revealPlayers(data){
+                 document.querySelector('.player1Reveal').innerHTML = data.playerName1 
+                 document.querySelector('.player2Reveal').innerHTML = data.playerName2
+            }
+            
+            function updateProgressBar(data){
+                
+                let now = new Date().getTime();
+                var pct = Math.floor(100 * (data.endTime - now) / data.totalTime);
+                if (pct < 2 || isNaN(pct)) {
+                    pct = 0;
+                }
+                progress.value = pct;                
+                if (pct < 20) {
+                    progress.classList.remove('is-info')
+                    progress.classList.add('is-danger');
+
+                } 
+                if (pct < 1) {
+                    // if 0 or negative, no need to update again.
+                    progress.classList.remove('is-danger')
+                    progress.classList.add('is-info');
+                    return;
+                }
+                
+            
+                setTimeout(updateProgressBar.bind(this, data), 100);
+                
+            }
+            
+            
+            function onDrawingEvent(data){
+                if ( data.data.clear ) {
+                    clearCanvas(data)
+                    return 
+                }
+                
+                if ( data.player1 === data.data.userid) {
+                    ctx1.beginPath();
+                    ctx1.moveTo(data.data.current.x0, data.data.current.y0);
+                    ctx1.lineTo(data.data.current.x1, data.data.current.y1);
+                    ctx1.strokeStyle = data.data.current.color;
+                    ctx1.lineWidth = data.data.current.lineWidth;
+                    ctx1.lineJoin = ctx1.lineCap = 'round';
+                    ctx1.stroke();
+                    ctx1.closePath();
+                
+                }
+        
+                if ( data.player2 === data.data.userid) {
+                    ctx2.beginPath();
+                    ctx2.moveTo(data.data.current.x0, data.data.current.y0);
+                    ctx2.lineTo(data.data.current.x1, data.data.current.y1);
+                    ctx2.strokeStyle = data.data.current.color;
+                    ctx2.lineWidth = data.data.current.lineWidth;
+                    ctx2.lineJoin = ctx2.lineCap = 'round';
+                    ctx2.stroke();
+                    ctx2.closePath();
+                }
+            }
+            
+            
+             function clearCanvas(data) {
+                if ( data.player1 === data.data.userid) {
+                    ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+                }
+                if ( data.player2 === data.data.userid) {
+                    ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+                }
+            }
+            
+            
+            function init() {
+                // Get the specific canvas element from the HTML document
+                canvas1 = document.querySelector('#sketchpad1');
+                canvas2 = document.querySelector('#sketchpad2');
+
+                // If the browser supports the canvas tag, get the 2d drawing context for this canvas               
+                ctx1 = canvas1.getContext('2d');
+                ctx2 = canvas2.getContext('2d');
+                
+            }
+            
+            
+            
+            
+            document.querySelector('.roundtest').addEventListener('click', ()=>{
+                socket.emit('start')  
+            })
+
+        </script>
+    </body>
+</html>
