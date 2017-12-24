@@ -41,16 +41,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 var draws = []
-
 var whatToDraw
-var currentDraws = 0;
-
+var currentDraws = 0
+var maxDraws = 2
 
 function generateDraws() {
 
     draws = []
 
-    for (let i = 0; i < 6; i++ ){
+    for (let i = 0; i < maxDraws; i++ ){
         let randAdv = Math.floor(Math.random() * adjectives.length)
         let randNoun1 = Math.floor(Math.random() * nouns.length)
         let randNoun2 = Math.floor(Math.random() * nouns.length)
