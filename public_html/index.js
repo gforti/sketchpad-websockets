@@ -254,7 +254,7 @@ function emitNewQuestion() {
     q.endTime = new Date().getTime() + timeToAnswerMs;
     q.totalTime = timeToAnswerMs;
     q.whatToDraw = whatToDraw
-    q.roundsLeft = `${currentDraws+1}/${draws.length}`
+    q.roundsLeft = `${currentDraws}/${draws.length}`
 
    io.to(hostId).emit('whatToDraw', q)
    io.to(player1).emit('unlock', q)

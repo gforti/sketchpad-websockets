@@ -73,9 +73,7 @@
     font-weight: bold;
 }
 
-.selected {
-     border: 2px solid lime;
-}
+
 
 .color.black { background-color: black; }
 .color.red { background-color: red; }
@@ -83,7 +81,20 @@
 .color.blue { background-color: blue; }
 .color.yellow { background-color: yellow; }
 .color.brown { background-color: brown; }
+.color.white { background-color: white; border-color: black; }
+.color.orange { background-color: orange; }
+.color.violet { background-color: violet; }
+.color.gold { background-color: gold; }
+.color.silver { background-color: silver; }
+.color.gray { background-color: gray; }
+.color.skyblue { background-color: skyblue; }
+.color.orangered { background-color: orangered; }
+.color.khaki { background-color: khaki; }
+.color.yellowgreen { background-color: yellowgreen; }
 
+.selected, .color.white.selected {
+     border-color: lime;
+}
 
 input:required:invalid, 
 select:required:invalid,
@@ -163,20 +174,40 @@ textarea:required:valid
                                 <div class="color blue" data-color="blue"></div>
                                 <div class="color yellow" data-color="yellow"></div>
                                 <div class="color brown" data-color="brown"></div>
-                                
+                                <div class="color orange" data-color="orange"></div>
+                                <div class="color violet" data-color="violet"></div>
+                               
+                               </div> 
+                            <div class="colors">
                                 <div class="size" data-size="2">2</div>
+                                <div class="size" data-size="4">4</div>
                                 <div class="size" data-size="6">6</div>
+                                <div class="size" data-size="8">8</div>
                                 <div class="size" data-size="12">12</div>
+                                <div class="size" data-size="16">16</div>
                                 <div class="size" data-size="20">20</div>
                                 <div class="size" data-size="30">30</div>
-                                
-                                <button id="clearbutton" onclick="clearCanvas(canvas,ctx);">Clear</button>
                             </div>
-                             
-                            
+                                
                             <div class="sketch">                       
                                 <canvas id="sketchpad" width="300" height="200"></canvas>
                             </div>
+                            <div class="colors">
+                                 <div class="color gold" data-color="gold"></div>
+                                 <div class="color silver" data-color="silver"></div>
+                                 <div class="color white" data-color="white"></div>
+                                 <div class="color gray" data-color="gray"></div>
+                                 <div class="color skyblue" data-color="skyblue"></div>
+                                 <div class="color yellowgreen" data-color="yellowgreen"></div>
+                                 <div class="color orangered" data-color="orangered"></div>
+                                 <div class="color khaki" data-color="khaki"></div>
+                            </div>
+                            
+                            <footer class="footer">
+                                <div class="content has-text-centered">
+                                <button id="clearbutton" onclick="clearCanvas();">Clear</button>
+                                </div>
+                            </footer>
                         
                     </div>
                     
@@ -439,6 +470,9 @@ textarea:required:valid
         const pos = getTouchPos()
         current.x0 = pos.x;
         current.y0 = pos.y;
+        current.x1 = pos.x;
+        current.y1 = pos.y;
+        draw()
         // Prevents an additional mousedown event being triggered
         event.preventDefault();
     }
@@ -456,8 +490,7 @@ textarea:required:valid
         event.preventDefault();
     }
     
-    function sketchpad_touchEnd() {
-        draw()
+    function sketchpad_touchEnd() {       
         canDraw=false;        
     }
 
