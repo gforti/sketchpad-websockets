@@ -8,6 +8,9 @@ var port = process.env.PORT || 3000
 const host_ip = require('./host-ip')
 var gameUrl = `http://${host_ip}:${port}`
 
+var adjectives = require('./adjectives')
+var nouns = require('./nouns')
+var verbs = require('./verbs')
 
 var questions = []
 var curQuestion = 0;
@@ -37,11 +40,17 @@ server.listen(port, function () {
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-var draws = shuffle([
-    'Draw an Ugly Christmas tree',
-    'Draw a melting snowman',
-    'Draw a black friday parking lot'
-])
+var draws = []
+
+for (let i = 0; i < 3; i++ ){
+    let randAdv = Math.floor(Math.random() * adjectives.length)
+    let randNoun1 = Math.floor(Math.random() * nouns.length)
+    let randNoun2 = Math.floor(Math.random() * nouns.length)
+    let randVerb = Math.floor(Math.random() * verbs.length)
+
+    draws.push(`Draw a ${adjectives[randAdv]} ${nouns[randNoun1]} that is going to ${verbs[randVerb]} with ${nouns[randNoun2]}`)
+}
+
 
 var whatToDraw
 var currentDraws = 0;

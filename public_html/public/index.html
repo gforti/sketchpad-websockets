@@ -16,6 +16,10 @@
     -ms-user-select: none;
     user-select: none;
 }
+
+.sketch, .voting {
+    text-align: center;
+}
 .leftside {
     float:left;
     width:220px;
@@ -29,16 +33,17 @@
     margin-left:10px;
 }
 #sketchpad {
-    float:left;
-    height:300px;
-    width:400px;
+    margin: 0 auto;
+    height:200px;
+    width:300px;
     border:2px solid #888;
     border-radius:4px;
     position:relative; /* Necessary for correct mouse co-ords in Firefox */
 }
 #clearbutton {
+    height: 32px;
     font-size: 15px;
-    padding: 10px;
+    padding: 0.4rem;
     -webkit-appearance: none;
     background: #eee;
     border: 1px solid #888;
@@ -46,14 +51,26 @@
 
 
 .colors {
-  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+   margin-bottom: 0.4rem;
 }
 
 .color, .size {
   display: inline-block;
-  height: 48px;
-  width: 48px;
+  height: 32px;
+  width: 32px;
   border: 2px solid transparent;
+  text-align: center;
+  margin-right: 0.4rem;
+}
+
+
+.size {
+    border-color: black;
+    font-weight: bold;
 }
 
 .selected {
@@ -65,6 +82,7 @@
 .color.green { background-color: green; }
 .color.blue { background-color: blue; }
 .color.yellow { background-color: yellow; }
+.color.brown { background-color: brown; }
 
 
 input:required:invalid, 
@@ -80,56 +98,90 @@ textarea:required:valid
 {
   border: 1px solid green;
 }
+
+
+ .level {
+                font-weight: bold;
+                background-image: linear-gradient(141deg, #ff0561 0%, #ff3860 71%, #ff5257 100%);
+                margin: 0 !important;
+                padding: 1rem;
+            }
+            
+            .login {
+                text-align: center;
+            }
+            
+            .game {
+                margin-top: 0.6rem;
+            }
             
 </style>
     </head>
     <body>
-       
-   
-      <div class="login">
-        <div class="section">
-            <h1 class="title">User Name</h1>
-            <input name="user" type="text" class="input is-large" required />
-            <div class="icons"></div>
-            <button class="button is-primary is-large login">Ready</button>
-        </div>
-    </div>
-        
-        <progress class="progress is-large is-info" value="100" max="100"></progress>
         
         
- <div id="sketchpadapp">
-        <div class="leftside">
-            <h1 class="title candraw">Can Draw: false</h1>
-           
-             <div class="colors">
-                <div class="color black" data-color="black"></div>
-                <div class="color red" data-color="red"></div>
-                <div class="color green" data-color="green"></div>
-                <div class="color blue" data-color="blue"></div>
-                <div class="color yellow" data-color="yellow"></div>
+        <section class="hero is-light is-fullheight">
+            <div class="hero-head">
+                <nav class="level is-mobile">         
+                    <div class="level-item has-text-centered currentUser"></div> 
+                    <div class="level-item has-text-centered points"></div>
+                    <div class="level-item has-text-centered numUsers"></div>                 
+                </nav>
+
+
+                <div class="login">
+                    <div class="section">
+                        <h1 class="title">User Name</h1>
+                        <input name="user" type="text" class="input is-large" required />
+                        <div class="icons"></div>
+                        <button class="button is-primary is-large login">Ready</button>
+                    </div>
+                </div>
+                
+                <div class="game is-hidden">
+                    <progress class="progress is-large is-info" value="100" max="100"></progress>
+                    
+                    <div class="voting is-hidden">
+                        <h1 class="title">Vote</h1>
+                        <button class="button is-link is-large player1">Player 1</button>
+                        <button class="button is-success is-large player2">Player 2</button>
+                    </div>
+                    
+                    <div id="sketchpadapp" class="is-hidden">
+                        
+                            <h1 class="title candraw">Can Draw: false</h1>
+
+                             <div class="colors">
+                                <div class="color black" data-color="black"></div>
+                                <div class="color red" data-color="red"></div>
+                                <div class="color green" data-color="green"></div>
+                                <div class="color blue" data-color="blue"></div>
+                                <div class="color yellow" data-color="yellow"></div>
+                                <div class="color brown" data-color="brown"></div>
+                                
+                                <div class="size" data-size="2">2</div>
+                                <div class="size" data-size="6">6</div>
+                                <div class="size" data-size="12">12</div>
+                                <div class="size" data-size="20">20</div>
+                                <div class="size" data-size="30">30</div>
+                                
+                                <button id="clearbutton" onclick="clearCanvas(canvas,ctx);">Clear</button>
+                            </div>
+                             
+                            
+                            <div class="sketch">                       
+                                <canvas id="sketchpad" width="300" height="200"></canvas>
+                            </div>
+                        
+                    </div>
+                    
+                </div>
+                
+                
             </div>
-            
-             <div class="colors">
-                <div class="size" data-size="2">2</div>
-                <div class="size" data-size="6">6</div>
-                <div class="size" data-size="12">12</div>
-                <div class="size" data-size="20">20</div>
-                <div class="size" data-size="30">30</div>
-            </div>
-             <input type="submit" value="Clear Sketchpad" id="clearbutton" onclick="clearCanvas(canvas,ctx);">
-             
-             
-             <div class="voting is-hidden">
-                 <button class="button is-link is-large player1">Player 1</button>
-                 <button class="button is-success is-large player2">Player 2</button>
-             </div>
-             
-        </div>
-        <div class="rightside">
-            <canvas id="sketchpad" height="300" width="400"></canvas>
-        </div>
-    </div>
+        </section>
+        
+ 
 
 
 <script src="/socket.io/socket.io.js"></script>
@@ -215,12 +267,14 @@ textarea:required:valid
       
       
     socket.on('login', function (data) {        
-        userid = data.userid        
+        userid = data.userid 
+        show('.game')
     });
     
     socket.on('unlock', function (data) {        
         allowed = true  
         clearCanvas()
+        show('#sketchpadapp')
         document.querySelector('.candraw').innerHTML = 'Can Draw: true'
          progress.value = 100;
         updateProgressBar(data)
@@ -251,6 +305,7 @@ textarea:required:valid
                 progress.classList.remove('is-danger')
                 progress.classList.add('is-info');
                 allowed = false
+                hide('#sketchpadapp')
                 document.querySelector('.candraw').innerHTML = 'Can Draw: false'
                 hide('.voting')
                 socket.emit('draw timer')
