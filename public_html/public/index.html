@@ -49,7 +49,7 @@
   
 }
 
-.color {
+.color, .size {
   display: inline-block;
   height: 48px;
   width: 48px;
@@ -112,10 +112,10 @@ textarea:required:valid
             
              <div class="colors">
                 <div class="size" data-size="2">2</div>
-                <div class="size" data-size="4">4</div>
                 <div class="size" data-size="6">6</div>
-                <div class="size" data-size="8">8</div>
-                <div class="size" data-size="10">10</div>
+                <div class="size" data-size="12">12</div>
+                <div class="size" data-size="20">20</div>
+                <div class="size" data-size="30">30</div>
             </div>
              <input type="submit" value="Clear Sketchpad" id="clearbutton" onclick="clearCanvas(canvas,ctx);">
              
@@ -252,6 +252,7 @@ textarea:required:valid
                 progress.classList.add('is-info');
                 allowed = false
                 document.querySelector('.candraw').innerHTML = 'Can Draw: false'
+                hide('.voting')
                 socket.emit('draw timer')
                 return;
             }

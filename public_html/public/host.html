@@ -57,8 +57,10 @@
             </div>
             <div class="rightside">
                 <p class="player1Reveal"></p>
+                <p class="player1Votes"></p>
                 <canvas id="sketchpad1" height="300" width="400"></canvas>
                 <p class="player2Reveal"></p>
+                <p class="player2Votes"></p>
                 <canvas id="sketchpad2" height="300" width="400"></canvas>
             </div>
         </div>
@@ -90,6 +92,7 @@
                 document.querySelector('.drawwhat').innerHTML = "Round over" 
                 progress.value = 100;
                 updateProgressBar(data)
+                displayVotes(data)
             });
             
             
@@ -107,6 +110,11 @@
             function revealPlayers(data){
                  document.querySelector('.player1Reveal').innerHTML = data.playerName1 
                  document.querySelector('.player2Reveal').innerHTML = data.playerName2
+            }
+            
+            function displayVotes(data){
+                 document.querySelector('.player1Votes').innerHTML = data.player1Votes 
+                 document.querySelector('.player2Votes').innerHTML = data.player2Votes
             }
             
             function updateProgressBar(data){

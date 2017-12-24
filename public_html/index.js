@@ -14,7 +14,8 @@ var curQuestion = 0;
 var totalQuestions = 0;
 
 var nextQuestionDelayMs = 5000; //5secs // how long are players 'warned' next question is coming
-var timeToAnswerMs = 60000; // 60secs // how long players have to answer question
+var timeToAnswerMs = 10000; // 60secs // how long players have to answer question
+var timeToVoteMs = 10000; // 15secs // how long players have to answer question
 var timeToEnjoyAnswerMs = 10000; //10secs // how long players have to read answer
 
 var answerData;
@@ -69,7 +70,8 @@ io.on('connection', function (socket) {
 
     // we store the username in the socket session for this client
 
-    data.points = 0
+    data.votes = 0
+    data.wins = 0
     data.player = 0
     data.drawReady = false
     data.voteDone = false
@@ -99,20 +101,19 @@ io.on('connection', function (socket) {
 
   socket.on('votefor', function (data) {
 
-      if (data.player === 1) {
-          players[player1].points++
-      }
-       if (data.player === 2) {
-          players[player2].points++
-      }
-    if (!players[socket.id]) return
-    players[socket.id].drawReady = true
+    if (data.player === 1) {
+        players[player1].votes++
+    }
+     if (data.player === 2) {
+        players[player2].votes++
+    }
 
 });
 
     socket.on('start', function (data) {
         if ( Object.keys(players).length < 2 || gameInProgress ) return
         currentDraws = 0
+        resetPlayerWins()
         emitNewQuestion();
     });
 
@@ -120,10 +121,19 @@ io.on('connection', function (socket) {
 });
 
 
+function resetPlayerWins() {
+    Object.keys(players)
+                    .forEach(id => {
+                        players[id].wins = 0
+                    })
+}
+
+
 function resetPlayerNewRound() {
     gameInProgress = true
     Object.keys(players)
                     .forEach(id => {
+                        players[id].votes = 0
                         players[id].player = 0
                         players[id].drawReady = false
                         players[id].voteDone = false
@@ -145,8 +155,8 @@ function checkQuestionTimer(time) {
         var canEmitVotes = players[player1].drawReady && players[player2].drawReady
         if (canEmitVotes) {
             let q = {}
-            q.endTime = new Date().getTime() + timeToAnswerMs;
-            q.totalTime = timeToAnswerMs;
+            q.endTime = new Date().getTime() + timeToVoteMs;
+            q.totalTime = timeToVoteMs;
             q.playerName1 = players[player1].username
             q.playerName2 = players[player2].username
             io.to(hostId).emit('votenow', q)
@@ -167,7 +177,7 @@ function checkQuestionTimer(time) {
 
 function checkVoteTimer(time) {
 
-    time = time || timeToEnjoyAnswerMs
+    time = time || timeToVoteMs
     setTimeout(function(){
         var canCloseVotes = Object.keys(players).filter(key => key!==player1 && key !== player2).every(key =>{
             return players[key].voteDone === true
@@ -177,6 +187,22 @@ function checkVoteTimer(time) {
             let q = {}
             q.endTime = new Date().getTime() + timeToEnjoyAnswerMs;
             q.totalTime = timeToEnjoyAnswerMs;
+            q.player1Votes = players[player1].votes
+            q.player2Votes = players[player2].votes
+
+            if ( players[player1].votes > players[player2].votes ) {
+                q.playerwinner = players[player1].username
+                players[player1].wins++
+            }
+
+            if ( players[player1].votes < players[player2].votes ) {
+                q.playerwinner = players[player2].username
+                players[player2].wins++
+            }
+
+            if ( players[player1].votes === players[player2].votes ) {
+                q.playerwinner = 'Tie'
+            }
 
             io.to(hostId).emit('rounddone', q)
 
@@ -184,8 +210,7 @@ function checkVoteTimer(time) {
                 if (currentDraws < draws.length) {
                     emitNewQuestion();
                 } else {
-                    gameInProgress = false
-                    io.to(hostId).emit('gamedone', players)
+                    emitWinner()
                 }
              }, timeToEnjoyAnswerMs);
 
@@ -212,6 +237,24 @@ function emitNewQuestion() {
 
 }
 
+
+
+function emitWinner() {
+
+    // todo: get all winners or set game to give point to just first who answers
+    // maybe just get a list of winners and display the winners differently
+
+    const mostWins = Math.max.apply(Math,Object.keys(players)
+                .map(key => players[key].wins))
+
+    var winners = Object.keys(players)
+                .filter(key => players[key].wins === mostWins)
+                .map(key => players[key].username)
+    gameInProgress = false
+
+    io.to(hostId).emit('gamedone', winners)
+
+}
 
 
 function shuffle(array) {
