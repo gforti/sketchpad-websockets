@@ -216,8 +216,7 @@ canvas {
         <script type="text/javascript">
     
             var socket = io();
-             var canvas1,ctx1, canvas2,ctx2;
-             
+            var canvas1,ctx1, canvas2,ctx2;
             let progress = document.querySelector('progress')
             
             socket.on('drawing', onDrawingEvent);
@@ -347,6 +346,9 @@ canvas {
             
             
             function onDrawingEvent(data){
+                
+                document.querySelector('.drawwhat').innerHTML = data.whatToDraw
+                
                 if ( data.data.clear ) {
                     clearCanvas(data)
                     return 

@@ -75,7 +75,7 @@ io.on('connection', function (socket) {
     });
   });
 
-  socket.on('drawing', (data) => io.to(hostId).emit('drawing', {data, players, player1, player2}));
+  socket.on('drawing', (data) => io.to(hostId).emit('drawing', {data, whatToDraw, players, player1, player2}));
 
 
   // when the client emits 'add user', this listens and executes
