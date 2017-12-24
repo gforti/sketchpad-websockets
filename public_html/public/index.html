@@ -342,6 +342,10 @@ textarea:required:valid
        practiceOver()
     });
     
+    socket.on('gamedone', function () {        
+       practice()
+    });
+    
     
     function practice(){
         show('#sketchpadapp')

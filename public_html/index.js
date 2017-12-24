@@ -42,18 +42,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var draws = []
 
-for (let i = 0; i < 6; i++ ){
-    let randAdv = Math.floor(Math.random() * adjectives.length)
-    let randNoun1 = Math.floor(Math.random() * nouns.length)
-    let randNoun2 = Math.floor(Math.random() * nouns.length)
-    let randVerb = Math.floor(Math.random() * verbs.length)
-
-    draws.push(`Draw a ${adjectives[randAdv]} ${nouns[randNoun1]} that is going to ${verbs[randVerb]} with ${nouns[randNoun2]}`)
-}
-
-
 var whatToDraw
 var currentDraws = 0;
+
+
+function generateDraws() {
+
+    draws = []
+
+    for (let i = 0; i < 6; i++ ){
+        let randAdv = Math.floor(Math.random() * adjectives.length)
+        let randNoun1 = Math.floor(Math.random() * nouns.length)
+        let randNoun2 = Math.floor(Math.random() * nouns.length)
+        let randVerb = Math.floor(Math.random() * verbs.length)
+
+        draws.push(`Draw ${adjectives[randAdv]} ${nouns[randNoun1]} and ${nouns[randNoun2]} that is going to ${verbs[randVerb]}`)
+    }
+}
+
 
 io.on('connection', function (socket) {
   var addedUser = false;
@@ -122,6 +128,7 @@ io.on('connection', function (socket) {
     socket.on('start', function (data) {
         if ( Object.keys(players).length < 2 || gameInProgress ) return
         socket.broadcast.emit('game starting');
+        generateDraws()
         currentDraws = 0
         resetPlayerWins()
         emitNewQuestion();
@@ -280,7 +287,7 @@ function emitWinner() {
                 .map(key => players[key].username)
     gameInProgress = false
 
-    io.to(hostId).emit('gamedone', winners)
+    io.sockets.emit('gamedone', winners)
 
 }
 
