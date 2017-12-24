@@ -155,7 +155,7 @@ canvas {
             <div class="container has-text-centered">
                 
                 <h1 class="title txt">Draw in 60 Seconds</h1>
-                <button class="roundtest button is-success is-large">Start</button>
+                <button class="roundstart button is-success is-large">Start</button>
                 
             </div>
         </section>
@@ -401,7 +401,7 @@ canvas {
             
             
             
-            document.querySelector('.roundtest').addEventListener('click', ()=>{
+            document.querySelector('.roundstart').addEventListener('click', ()=>{
                 socket.emit('start')
                   
             })

@@ -165,7 +165,7 @@ textarea:required:valid
                     
                     <div id="sketchpadapp" class="is-hidden">
                         
-                            <h1 class="title candraw">Can Draw: false</h1>
+                            <!-- <h1 class="title candraw">Can Draw: false</h1> -->
 
                              <div class="colors">
                                 <div class="color black" data-color="black"></div>
@@ -224,7 +224,7 @@ textarea:required:valid
 <script type="text/javascript">
     
     var socket = io();    
-    let canvas,ctx, allowed = false, canDraw=false    
+    let canvas,ctx, allowed = false, canDraw = false, practiceMode = true    
     let current = {
         lineWidth: 2,
         color: 'black',
@@ -309,6 +309,9 @@ textarea:required:valid
         
         updateUsers(data)
         updateWins(null)
+        
+        practice()
+        
     });
     
     socket.on('user joined', function (data) {
@@ -323,7 +326,7 @@ textarea:required:valid
         allowed = true  
         clearCanvas()
         show('#sketchpadapp')
-        document.querySelector('.candraw').innerHTML = 'Can Draw: true'
+        // document.querySelector('.candraw').innerHTML = 'Can Draw: true'
          progress.value = 100;
         updateProgressBar(data)
     });
@@ -335,6 +338,23 @@ textarea:required:valid
         updateProgressBar(data)
     });
     
+    socket.on('game starting', function () {        
+       practiceOver()
+    });
+    
+    
+    function practice(){
+        show('#sketchpadapp')
+        practiceMode = true
+        allowed = true
+    }
+    
+    function practiceOver(){
+        hide('#sketchpadapp')
+        clearCanvas()
+        practiceMode = false
+        allowed = false
+    }
     
     function updateUsers(data) {
         if (data.numUsers)
@@ -380,7 +400,7 @@ textarea:required:valid
                 progress.classList.add('is-info');
                 allowed = false
                 hide('#sketchpadapp')
-                document.querySelector('.candraw').innerHTML = 'Can Draw: false'
+                // document.querySelector('.candraw').innerHTML = 'Can Draw: false'
                 hide('.voting')
                 socket.emit('draw timer')
                 return;
@@ -407,8 +427,9 @@ textarea:required:valid
             const w = canvas.width;
             const h = canvas.height;
 
-
-            socket.emit('drawing', {current, userid});
+            if(!practiceMode) {
+                socket.emit('drawing', {current, userid});
+            }
          }
        
     } 
@@ -417,7 +438,7 @@ textarea:required:valid
     function clearCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        if (allowed) {
+        if (allowed && !practiceMode) {
             socket.emit('drawing', {            
                 clear: true,
                 userid
