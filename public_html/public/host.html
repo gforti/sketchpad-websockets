@@ -43,27 +43,173 @@
     background: #eee;
     border: 1px solid #888;
 }
+
+
+.where h1 {
+    letter-spacing: 0.1rem;
+    font-weight: bold;
+}
+
+
+
+
+.where {
+    position: fixed;
+    top: 0;
+    background: #a90e0e;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    width:100%;
+    padding: 1rem;
+    font-size: 3rem;
+
+}
+
+
+
+.players {
+    background-color: #a90e0e;
+    position: fixed;
+    top: 0;
+    width:100px;
+    color: white;
+    text-align: center;
+    padding: 0.4rem
+}
+
+.players .title{ 
+    color: white;
+}
+
+.Aligner {
+    display: flex;
+    white-space: nowrap;
+}
+
+.Aligner-item {
+    max-width: 100%;
+    max-height: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-left: 0.1rem;
+}
+
+
+.level {
+                font-weight: bold;
+                background-image: linear-gradient(141deg, #ff0561 0%, #ff3860 71%, #ff5257 100%);
+                margin: 0 !important;
+                padding: 1rem;
+            }
+
+            
+            .hero.is-light .level .title {
+                 color: white;
+            }
+            
+            .login {
+                text-align: center;
+            }
+            
+            .game {
+                margin-top: 0.6rem;
+            }
+            
+            .sketch, .voting {
+    text-align: center;
+}
+
+.intro {
+    background-color: #009e6c;
+    color: whitesmoke;
+}
+
+
+@keyframes color_change {
+    from { color: red; }
+    to { color: gold; }
+}
+
+.txt {
+    font-size: 5.2vw;
+    font-weight: bold;
+    color: gold;
+    text-shadow: 0.2vw 0.2vw 10px #000;
+    animation: color_change 1s infinite alternate;
+}
+
+canvas {
+    border:2px solid #888;
+    border-radius:4px;
+}
+
 </style>
     </head>
     <body>
         
-        <progress class="progress is-large is-info" value="100" max="100"></progress>
-        
-        <h1 class="drawwhat"></h1>
-        
-        <div id="sketchpadapp">
-            <div class="leftside">
-                 <button class="roundtest button is-light is-large">Start</button>
+        <div class="where"><h1></h1></div>
+        <div class="players"></div>
+
+        <section class="section is-large intro">           
+            <div class="container has-text-centered">
+                
+                <h1 class="title txt">Draw in 60 Seconds</h1>
+                <button class="roundtest button is-success is-large">Start</button>
+                
             </div>
-            <div class="rightside">
-                <p class="player1Reveal"></p>
-                <p class="player1Votes"></p>
-                <canvas id="sketchpad1" height="300" width="400"></canvas>
-                <p class="player2Reveal"></p>
-                <p class="player2Votes"></p>
-                <canvas id="sketchpad2" height="300" width="400"></canvas>
+        </section>
+        
+         <section class="hero is-light is-fullheight is-hidden">
+            <div class="hero-head">
+                <nav class="level is-mobile">         
+                    <div class="level-item has-text-centered">
+                        <div>
+                            <p class="heading">Location</p>
+                            <p class="title where2"></p>
+                        </div>
+                    </div> 
+                    <div class="level-item has-text-centered leader"></div>
+                    <div class="level-item has-text-centered numUsers"></div>
+                     <div class="level-item has-text-centered">
+                        <div>
+                            <p class="heading">Rounds</p>
+                            <p class="title remain">?</p>
+                        </div>
+                    </div>                    
+                </nav>
+                
+                <div class="game">
+                    <progress class="progress is-large is-info" value="100" max="100"></progress>
+                    
+                    <div class="container has-text-centered">
+                        <h1 class="drawwhat title is-1"></h1>
+                    </div>
+                    <div id="sketchpadapp" class="columns">
+                        <div class="column">
+                            <div class="box has-text-centered">
+                                <div>
+                                    <p class="heading player1Reveal"></p>
+                                    <p class="title player1Votes"></p>
+                                </div>                               
+                                <h1 class="title">Player 1</h1>
+                                <canvas id="sketchpad1" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                        <div class="column">   
+                            <div class="box has-text-centered">
+                                 <div>
+                                    <p class="heading player2Reveal"></p>
+                                    <p class="title player2Votes"></p>
+                                </div>                               
+                                <h1 class="title">Player 2</h1>
+                                <canvas id="sketchpad2" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+        </section>
         
         <script src="/socket.io/socket.io.js"></script>
         
@@ -76,6 +222,9 @@
             
             socket.on('drawing', onDrawingEvent);
             socket.on('whatToDraw', (data) => {
+                gameStarting()
+                clearDisplayVotes()
+                updateRoundsLeft(data)
                 document.querySelector('.drawwhat').innerHTML = data.whatToDraw 
                 progress.value = 100;
                 updateProgressBar(data)
@@ -84,8 +233,7 @@
             socket.on('votenow', (data) => {
                 document.querySelector('.drawwhat').innerHTML = "vote now!" 
                 progress.value = 100;
-                updateProgressBar(data)
-                revealPlayers(data)
+                updateProgressBar(data)               
             });
             
             socket.on('rounddone', (data) => {
@@ -97,9 +245,55 @@
             
             
              socket.on('gamedone', (data) => {
-                document.querySelector('.drawwhat').innerHTML = "Game over" 
+                document.querySelector('#sketchpadapp').classList.add('is-hidden')                 
+                stopTrack();
+                winnerTrack.play()
+                winners =  data && data.length > 0 ? data.join(', ') : data && data.length ? data[0] : 'unknown'
+                document.querySelector('.drawwhat').innerHTML = `Game over. <br /> Winners: ${winners}`
+                
                 
             });
+            
+            socket.on('host-game-info', function (data) {
+                
+                document.querySelector('.where h1').innerHTML = data.gameUrl
+                document.querySelector('.where2').innerHTML = data.gameUrl
+                updateUsers(data)  
+
+                if ( data.gameInProgress ) {
+                    gameStarting()
+                }
+
+           });
+           
+            socket.on('user joined', function (data) {
+                updateUsers(data)                
+            });
+           
+           
+            function gameStarting() {
+                document.querySelector('.intro').classList.add('is-hidden')               
+                document.querySelector('.where').classList.add('is-hidden')               
+                document.querySelector('.players').classList.add('is-hidden')               
+                document.querySelector('section.hero').classList.remove('is-hidden')
+            }
+           
+           function updateUsers(data){
+               document.querySelector('.players').innerHTML = ` <div>
+                            <p class="heading">Total<br />Players</p>
+                            <p class="title is-light">${data.numUsers}</p>
+                        </div>
+                       
+                        ${Object.keys(data.players).map(id => `
+                        <div class="Aligner">                            
+                            <div class="Aligner-item">
+                                ${data.players[id].username}
+                            </div>
+                        </div>
+                        `).join('')}
+                        
+            ` 
+            }
             
             
              window.addEventListener('load', ()=> {
@@ -107,14 +301,23 @@
                 socket.emit('host');               
             })
             
-            function revealPlayers(data){
-                 document.querySelector('.player1Reveal').innerHTML = data.playerName1 
-                 document.querySelector('.player2Reveal').innerHTML = data.playerName2
+            
+            function updateRoundsLeft(data){
+                document.querySelector('.remain').innerHTML = data.roundsLeft
+            }
+                       
+            function displayVotes(data){
+                document.querySelector('.player1Reveal').innerHTML = data.playerName1 
+                document.querySelector('.player2Reveal').innerHTML = data.playerName2
+                document.querySelector('.player1Votes').innerHTML = data.player1Votes 
+                document.querySelector('.player2Votes').innerHTML = data.player2Votes
             }
             
-            function displayVotes(data){
-                 document.querySelector('.player1Votes').innerHTML = data.player1Votes 
-                 document.querySelector('.player2Votes').innerHTML = data.player2Votes
+            function clearDisplayVotes(){
+                document.querySelector('.player1Reveal').innerHTML = '' 
+                document.querySelector('.player2Reveal').innerHTML = ''
+                document.querySelector('.player1Votes').innerHTML = ''
+                document.querySelector('.player2Votes').innerHTML = ''
             }
             
             function updateProgressBar(data){
@@ -199,8 +402,47 @@
             
             
             document.querySelector('.roundtest').addEventListener('click', ()=>{
-                socket.emit('start')  
+                socket.emit('start')
+                  
             })
+            
+            
+            
+            
+         var winnerTrack = new Audio(`tracks/winner.mp3`)
+         var tracks = [];
+         for (let i = 1; i < 9; i++)
+         tracks.push(new Audio(`tracks/epic${i}.mp3`));
+         
+         tracks.sort(function() {return 0.5 - Math.random()});
+         
+         var currentTrack = 0;
+         var allTracks = x = tracks.length;
+         
+         while (x--) {
+             tracks[x].addEventListener('ended',playNextTrack);
+         }
+         
+         
+         function stopTrack() {
+             tracks[currentTrack].pause();
+         }
+         
+         function playTrack() {
+             tracks[currentTrack].play();
+         }
+         
+         function playNextTrack() {
+              currentTrack = (currentTrack + 1) % allTracks;
+              playTrack();
+         }
+         
+         
+         window.addEventListener('DOMContentLoaded', playTrack);
+            
+            
+            
+            
 
         </script>
     </body>

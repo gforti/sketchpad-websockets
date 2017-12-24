@@ -100,11 +100,16 @@ textarea:required:valid
 }
 
 
- .level {
+        .level {
                 font-weight: bold;
                 background-image: linear-gradient(141deg, #ff0561 0%, #ff3860 71%, #ff5257 100%);
                 margin: 0 !important;
                 padding: 1rem;
+                color: white;
+            }
+            
+            .hero.is-light .level .title {
+                 color: white;
             }
             
             .login {
@@ -260,6 +265,7 @@ textarea:required:valid
         if (username.checkValidity()) {                 
           // Tell the server your username
           username = username.value
+          setCurrentUser({username})
           socket.emit('add user', {username}); 
           hide('.login')
         }
@@ -269,6 +275,17 @@ textarea:required:valid
     socket.on('login', function (data) {        
         userid = data.userid 
         show('.game')
+        
+        updateUsers(data)
+        updateWins(null)
+    });
+    
+    socket.on('user joined', function (data) {
+        updateUsers(data)                
+    });
+    
+    socket.on('roundupdate', function (data) { 
+        updateWins(data)
     });
     
     socket.on('unlock', function (data) {        
@@ -286,6 +303,32 @@ textarea:required:valid
          progress.value = 100;
         updateProgressBar(data)
     });
+    
+    
+    function updateUsers(data) {
+        if (data.numUsers)
+            document.querySelector('.numUsers').innerHTML = `
+                <div>
+                    <p class="heading">Players</p>
+                    <p class="title">${data.numUsers}</p>
+                </div> `;
+    }
+
+    function updateWins(data) {           
+            document.querySelector('.points').innerHTML = `
+                <div>
+                    <p class="heading">Wins</p>
+                    <p class="title">${data ? data[userid].wins : 0}</p>
+                </div> `;
+    }
+
+    function setCurrentUser(data) {
+        if (data.username)
+            document.querySelector('.currentUser').innerHTML = `
+                <div>
+                    <p class="title">${data.username}</p>                   
+                </div> `;
+    }
       
       
         function updateProgressBar(data){

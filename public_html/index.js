@@ -17,8 +17,8 @@ var curQuestion = 0;
 var totalQuestions = 0;
 
 var nextQuestionDelayMs = 5000; //5secs // how long are players 'warned' next question is coming
-var timeToAnswerMs = 10000; // 60secs // how long players have to answer question
-var timeToVoteMs = 10000; // 15secs // how long players have to answer question
+var timeToAnswerMs = 60000; // 60secs // how long players have to answer question
+var timeToVoteMs = 15000; // 15secs // how long players have to answer question
 var timeToEnjoyAnswerMs = 10000; //10secs // how long players have to read answer
 
 var answerData;
@@ -42,7 +42,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var draws = []
 
-for (let i = 0; i < 3; i++ ){
+for (let i = 0; i < 6; i++ ){
     let randAdv = Math.floor(Math.random() * adjectives.length)
     let randNoun1 = Math.floor(Math.random() * nouns.length)
     let randNoun2 = Math.floor(Math.random() * nouns.length)
@@ -127,6 +127,22 @@ io.on('connection', function (socket) {
     });
 
 
+  socket.on('disconnect', function () {
+    if (players[socket.id]) {
+     delete players[socket.id]
+
+      // echo globally that this client has left
+      socket.broadcast.emit('user joined', {
+        numUsers: Object.keys(players).length,
+        players : players
+      });
+
+
+    }
+  });
+
+
+
 });
 
 
@@ -166,8 +182,6 @@ function checkQuestionTimer(time) {
             let q = {}
             q.endTime = new Date().getTime() + timeToVoteMs;
             q.totalTime = timeToVoteMs;
-            q.playerName1 = players[player1].username
-            q.playerName2 = players[player2].username
             io.to(hostId).emit('votenow', q)
 
             Object.keys(players).filter(key => key!==player1 && key !== player2).forEach( key => {
@@ -198,6 +212,8 @@ function checkVoteTimer(time) {
             q.totalTime = timeToEnjoyAnswerMs;
             q.player1Votes = players[player1].votes
             q.player2Votes = players[player2].votes
+            q.playerName1 = players[player1].username
+            q.playerName2 = players[player2].username
 
             if ( players[player1].votes > players[player2].votes ) {
                 q.playerwinner = players[player1].username
@@ -214,6 +230,7 @@ function checkVoteTimer(time) {
             }
 
             io.to(hostId).emit('rounddone', q)
+            io.sockets.emit('roundupdate', players)
 
             setTimeout(function(){
                 if (currentDraws < draws.length) {
@@ -237,6 +254,7 @@ function emitNewQuestion() {
     q.endTime = new Date().getTime() + timeToAnswerMs;
     q.totalTime = timeToAnswerMs;
     q.whatToDraw = whatToDraw
+    q.roundsLeft = `${currentDraws+1}/${draws.length}`
 
    io.to(hostId).emit('whatToDraw', q)
    io.to(player1).emit('unlock', q)
