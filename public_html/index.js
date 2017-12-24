@@ -43,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 var draws = []
 var whatToDraw
 var currentDraws = 0
-var maxDraws = 2
+var maxDraws = 6
 
 function generateDraws() {
 
