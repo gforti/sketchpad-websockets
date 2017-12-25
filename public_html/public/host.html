@@ -236,7 +236,7 @@ canvas {
             });
             
             socket.on('rounddone', (data) => {
-                document.querySelector('.drawwhat').innerHTML = "Round over" 
+                document.querySelector('.drawwhat').innerHTML = `Round over <br /> Winner: ${data.playerwinner}` 
                 progress.value = 100;
                 updateProgressBar(data)
                 displayVotes(data)
@@ -362,6 +362,7 @@ canvas {
                     ctx1.lineWidth = data.data.current.lineWidth;
                     ctx1.lineJoin = ctx1.lineCap = 'round';
                     ctx1.stroke();
+                    
                     ctx1.closePath();
                 
                 }
@@ -372,8 +373,9 @@ canvas {
                     ctx2.lineTo(data.data.current.x1, data.data.current.y1);
                     ctx2.strokeStyle = data.data.current.color;
                     ctx2.lineWidth = data.data.current.lineWidth;
-                    ctx2.lineJoin = ctx2.lineCap = 'round';
+                    ctx2.lineJoin = ctx2.lineCap = 'round';                    
                     ctx2.stroke();
+                    
                     ctx2.closePath();
                 }
             }
@@ -407,7 +409,7 @@ canvas {
                 socket.emit('start')
                   
             })
-            
+          
             
             
             

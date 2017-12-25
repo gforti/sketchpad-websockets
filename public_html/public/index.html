@@ -322,7 +322,8 @@ textarea:required:valid
         updateWins(data)
     });
     
-    socket.on('unlock', function (data) {        
+    socket.on('unlock', function (data) {  
+        practiceOver()
         allowed = true  
         clearCanvas()
         show('#sketchpadapp')

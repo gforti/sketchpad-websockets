@@ -16,10 +16,10 @@ var questions = []
 var curQuestion = 0;
 var totalQuestions = 0;
 
-var nextQuestionDelayMs = 5000; //5secs // how long are players 'warned' next question is coming
-var timeToAnswerMs = 70000; // 70secs // how long players have to answer question
-var timeToVoteMs = 15000; // 15secs // how long players have to answer question
-var timeToEnjoyAnswerMs = 10000; //10secs // how long players have to read answer
+var nextQuestionDelayMs = 1000 //5000; //5secs // how long are players 'warned' next question is coming
+var timeToAnswerMs = 1000; // 70secs // how long players have to answer question
+var timeToVoteMs = 1000; // 15secs // how long players have to answer question
+var timeToEnjoyAnswerMs = 1000; //10secs // how long players have to read answer
 
 var answerData;
 var answerDetails;
@@ -30,6 +30,11 @@ var questionPhase = 1
 
 var hostId, player1, player2
 
+var draws = []
+var whatToDraw
+var currentDraws = 0
+var maxDraws = 0
+var playerDraws = []
 
 server.listen(port, function () {
   console.log('Game url', gameUrl);
@@ -40,22 +45,30 @@ server.listen(port, function () {
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-var draws = []
-var whatToDraw
-var currentDraws = 0
-var maxDraws = 6
+function coinFlip() {
+    return (Math.floor(Math.random() * 2) == 0);
+}
 
-function generateDraws() {
 
-    draws = []
+function generateDraws(amount) {
 
-    for (let i = 0; i < maxDraws; i++ ){
+    if (!amount) {
+        draws = []
+    }
+
+    let limit = amount || maxDraws
+
+    for (let i = 0; i < limit; i++ ){
         let randAdv = Math.floor(Math.random() * adjectives.length)
         let randNoun1 = Math.floor(Math.random() * nouns.length)
         let randNoun2 = Math.floor(Math.random() * nouns.length)
         let randVerb = Math.floor(Math.random() * verbs.length)
 
-        draws.push(`Draw ${adjectives[randAdv]} ${nouns[randNoun1]} and ${nouns[randNoun2]} that is going to ${verbs[randVerb]}`)
+        if ( coinFlip() ) {
+            draws.push(`Draw ${adjectives[randAdv]} ${nouns[randNoun1]}`)
+        } else {
+            draws.push(`Draw a ${nouns[randNoun2]} that is going to ${verbs[randVerb]}`)
+        }
     }
 }
 
@@ -89,6 +102,7 @@ io.on('connection', function (socket) {
     data.player = 0
     data.drawReady = false
     data.voteDone = false
+    data.tries = 0
     players[socket.id] = Object.assign({}, data);
 
     addedUser = true;
@@ -102,6 +116,11 @@ io.on('connection', function (socket) {
       numUsers: Object.keys(players).length,
       players : players
     });
+
+    if (gameInProgress) {
+        adjustForNewPlayer(socket.id)
+    }
+
   });
 
 
@@ -127,8 +146,9 @@ io.on('connection', function (socket) {
     socket.on('start', function (data) {
         if ( Object.keys(players).length < 2 || gameInProgress ) return
         socket.broadcast.emit('game starting');
-        generateDraws()
         currentDraws = 0
+        maxDraws = Object.keys(players).length*2
+        generateDraws()
         resetPlayerWins()
         emitNewQuestion();
     });
@@ -137,6 +157,7 @@ io.on('connection', function (socket) {
   socket.on('disconnect', function () {
     if (players[socket.id]) {
      delete players[socket.id]
+     adjustForDisconnectPlayer(socket.id)
 
       // echo globally that this client has left
       socket.broadcast.emit('user joined', {
@@ -153,10 +174,45 @@ io.on('connection', function (socket) {
 });
 
 
+function adjustForNewPlayer() {
+    generateDraws(2)
+}
+
+
+function adjustForDisconnectPlayer() {
+    draws.splice(-2)
+}
+
+
+function getNextPlayers() {
+
+// Fix here?
+    var registredPlayers = shuffle(Object.keys(players).filter( id => players[id].tries < 1))
+
+    console.log('registredPlayers.length', registredPlayers.length)
+    if ( !registredPlayers.length ) {
+        registredPlayers = shuffle(Object.keys(players).filter( id => players[id].tries < 2))
+    }
+
+    console.log('registredPlayers', registredPlayers)
+
+    if ( registredPlayers.length === 1 ) {
+        var playerShuffle = shuffle(Object.keys(players).filter( id => registredPlayers[0] !== id))
+        var randPlayer = playerShuffle[Math.floor(Math.random() * playerShuffle.length)];
+        registredPlayers.push(randPlayer);
+        return shuffle(registredPlayers)
+    } else {
+        return [registredPlayers[0],registredPlayers[1]]
+    }
+
+}
+
+
 function resetPlayerWins() {
     Object.keys(players)
                     .forEach(id => {
                         players[id].wins = 0
+                        players[id].tries = 0
                     })
 }
 
@@ -171,11 +227,13 @@ function resetPlayerNewRound() {
                         players[id].voteDone = false
                     })
 
-    let shuffPlayers = shuffle(Object.keys(players))
-    player1 = shuffPlayers.shift()
-    player2 = shuffPlayers.shift()
+    var nextPlayers = getNextPlayers()
+    player1 = nextPlayers[0]
+    player2 = nextPlayers[1]
     players[player1].player = 1
+    players[player1].tries++
     players[player2].player = 2
+    players[player2].tries++
     whatToDraw = draws[currentDraws]
     currentDraws++
 }
@@ -184,6 +242,10 @@ function checkQuestionTimer(time) {
 
     time = time || timeToAnswerMs
     setTimeout(function(){
+        if ( !players[player1] || !players[player2]) {
+            emitNewQuestion()
+            return
+        }
         var canEmitVotes = players[player1].drawReady && players[player2].drawReady
         if (canEmitVotes) {
             let q = {}
@@ -209,6 +271,10 @@ function checkVoteTimer(time) {
 
     time = time || timeToVoteMs
     setTimeout(function(){
+        if ( !players[player1] || !players[player2]) {
+            emitNewQuestion()
+            return
+        }
         var canCloseVotes = Object.keys(players).filter(key => key!==player1 && key !== player2).every(key =>{
             return players[key].voteDone === true
         });
@@ -240,11 +306,7 @@ function checkVoteTimer(time) {
             io.sockets.emit('roundupdate', players)
 
             setTimeout(function(){
-                if (currentDraws < draws.length) {
-                    emitNewQuestion();
-                } else {
-                    emitWinner()
-                }
+                emitNewQuestion()
              }, timeToEnjoyAnswerMs);
 
         } else {
@@ -257,6 +319,11 @@ function checkVoteTimer(time) {
 
 function emitNewQuestion() {
     resetPlayerNewRound()
+
+    if (currentDraws >= draws.length) {
+        emitWinner()
+        return
+    }
     let q = {}
     q.endTime = new Date().getTime() + timeToAnswerMs;
     q.totalTime = timeToAnswerMs;
