@@ -17,7 +17,7 @@ var curQuestion = 0;
 var totalQuestions = 0;
 
 var nextQuestionDelayMs = 5000 //5000; //5secs // how long are players 'warned' next question is coming
-var timeToAnswerMs = 10000; // 70secs // how long players have to answer question
+var timeToAnswerMs = 60000; // 70secs // how long players have to answer question
 var timeToVoteMs = 15000; // 15secs // how long players have to answer question
 var timeToEnjoyAnswerMs = 10000; //10secs // how long players have to read answer
 
