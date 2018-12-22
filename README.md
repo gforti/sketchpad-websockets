@@ -72,11 +72,12 @@ Players can enter a user name, select their icon then click on ready.  A loading
 
 > Run `http://localhost:3000/host.html` on the host machine that will be displayed to everyone
 
-The players ready will show up on the upper left corner of the web page for the host.  Once ready click `Start`.
+The players ready will show up on the upper left corner of the web page for the host.  Once ready click `Start`. the music will start when you click on the page.  This is due to a change in chrome to not allow
+music to play until the client interacts with the page.
 
 When the round is over the users **should not refresh their web browser**.
 
-> The Host should refresh the web browser to start a new round.
+> The Host should refresh the web browser to start a new game.
 
 ### Enjoy!
 
