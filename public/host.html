@@ -72,7 +72,7 @@
       background-color: #a90e0e;
       position: fixed;
       top: 0;
-      width: 100px;
+      width: 150px;
       color: white;
       text-align: center;
       padding: 0.4rem
@@ -153,6 +153,9 @@
       background-color: #d74342;
     }
 
+    .ready {
+      margin-top: 0.6rem;
+    }
 
     .winner {
       position: absolute;
@@ -185,6 +188,10 @@
       animation: snow 6s linear infinite forwards;
     }
 
+    .hidden {
+      visibility: hidden;
+    }
+
     @-webkit-keyframes snow {
       100% {
         background-position: 0px 200px, 0 200px, 0px 200px, 0px 200px;
@@ -211,8 +218,8 @@
 
       <h1 class="title txt">Draw in 60 Seconds</h1>
       <h1 class="title txt">Dibuje en 60 segundos</h1>
-      <button class="roundstart button is-success is-large">Start</button>
-
+      <button class="roundstart button is-link is-large">Start</button>
+      <p class="title txt playersNeeded"></p>
     </div>
   </section>
 
@@ -275,6 +282,9 @@
     let progress = document.querySelector('progress')
     let GAME_DONE = false
 
+    let numberOfPlayers = 0
+
+
     socket.on('drawing', onDrawingEvent);
     socket.on('whatToDraw', (data) => {
       gameStarting()
@@ -299,13 +309,12 @@
       displayVotes(data)
     });
 
-
     socket.on('gamedone', (data) => {
       GAME_DONE = true
       document.querySelector('#sketchpadapp').classList.add('is-hidden')
       playTrack()
       winners = data && data.length > 0 ? data.join(', ') : data && data.length ? data[0] : 'unknown'
-      document.querySelector('.drawwhat').innerHTML = `Winners: ${winners}<div class="winner"></div><button class="button is-danger is-large" onClick="window.location.reload(true);">Restart</button>`
+      document.querySelector('.drawwhat').innerHTML = `Winners: ${winners}<div class="winner"></div><button class="button is-danger is-large ready" onClick="window.location.reload(true);">Restart</button>`
 
     });
 
@@ -335,16 +344,22 @@
     }
 
     function updateUsersInGame(data) {
-      if (data.numUsers)
+      if (data.numUsers) {
+        numberOfPlayers = parseInt(data.numUsers, 10)
+        playersNeeded()
         document.querySelector('.numUsers').innerHTML = `
                 <div>
                     <p class="heading">Players</p>
                     <p class="title">${data.numUsers}</p>
                 </div> `;
+      }
     }
 
     function updateUsers(data) {
-      document.querySelector('.players').innerHTML = ` <div>
+      if (data.numUsers) {
+        numberOfPlayers = parseInt(data.numUsers, 10)
+        playersNeeded()
+        document.querySelector('.players').innerHTML = ` <div>
                             <p class="heading">Total<br />Players</p>
                             <p class="title is-light">${data.numUsers}</p>
                         </div>
@@ -357,12 +372,14 @@
                         </div>
                         `).join('')}
             `
+      }
     }
 
 
     window.addEventListener('load', () => {
       init()
       socket.emit('host');
+      playersNeeded()
     })
 
 
@@ -468,9 +485,28 @@
     }
 
     document.querySelector('.roundstart').addEventListener('click', () => {
-      socket.emit('start')
-
+      if (numberOfPlayers > 2) {
+        socket.emit('start')
+      } else {
+        playersNeeded()
+      }
     })
+
+    function playersNeeded() {
+      document.querySelector('.roundstart').classList.add('hidden')
+      const neededPlayers = Math.max(0, 3 - numberOfPlayers)
+      let PlayersVerbiage = 'Player'
+      if (neededPlayers > 1) {
+        PlayersVerbiage += 's'
+      }
+      if (numberOfPlayers > 2) {
+        document.querySelector('.roundstart').classList.remove('hidden')
+         document.querySelector('.playersNeeded').innerHTML = ''
+      } else {
+        document.querySelector('.playersNeeded').innerHTML = `${neededPlayers} ${PlayersVerbiage} Needed`
+      }
+
+    }
 
 
     let winnerTrack = new Audio(`tracks/winner.mp3`)

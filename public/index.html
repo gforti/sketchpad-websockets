@@ -191,8 +191,15 @@
       text-align: center;
     }
 
-    .game {
+    .game,
+    .ready
+    {
       margin-top: 0.6rem;
+    }
+
+    .level.is-mobile {
+      flex-wrap: wrap;
+      overflow: auto;
     }
   </style>
 </head>
@@ -214,7 +221,7 @@
           <h1 class="title">User Name / Nombre</h1>
           <input name="user" type="text" class="input is-large" required />
           <div class="icons"></div>
-          <button class="button is-primary is-large login">Ready / Listo</button>
+          <button class="button is-primary is-large login ready">Ready / Listo</button>
         </div>
       </div>
 
@@ -313,6 +320,9 @@
 
     })
 
+    window.addEventListener('DOMContentLoaded', ()=> {
+      document.querySelector('input[name="user"]').value = window.localStorage.getItem('username')
+    })
 
     let colors = document.getElementsByClassName('color');
 
@@ -359,6 +369,7 @@
       if (username.checkValidity()) {
         // Tell the server your username
         username = username.value
+        window.localStorage.setItem('username', username)
         setCurrentUser({ username })
         socket.emit('add user', { username });
         hide('.login')

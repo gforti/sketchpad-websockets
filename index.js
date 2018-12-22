@@ -146,7 +146,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('start', function (data) {
-    if (Object.keys(players).length < 2 || gameInProgress) return
+    if (Object.keys(players).length < 3 || gameInProgress) return
     socket.broadcast.emit('game starting');
     currentDraws = 0
     generateDraws()
