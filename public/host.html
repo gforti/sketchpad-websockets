@@ -305,7 +305,7 @@
       document.querySelector('#sketchpadapp').classList.add('is-hidden')
       playTrack()
       winners = data && data.length > 0 ? data.join(', ') : data && data.length ? data[0] : 'unknown'
-      document.querySelector('.drawwhat').innerHTML = `Winners: ${winners}<div class="winner"></div>`
+      document.querySelector('.drawwhat').innerHTML = `Winners: ${winners}<div class="winner"></div><button class="button is-danger is-large" onClick="window.location.reload(true);">Restart</button>`
 
     });
 
