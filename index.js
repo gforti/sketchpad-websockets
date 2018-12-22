@@ -333,6 +333,7 @@ function emitNewQuestion() {
   q.totalTime = timeToAnswerMs;
   q.whatToDraw = whatToDraw
   q.roundsLeft = `${currentDraws}/${draws.length}`
+  q.numUsers = Object.keys(players).length,
 
   io.to(hostId).emit('whatToDraw', q)
   io.to(player1).emit('unlock', q)

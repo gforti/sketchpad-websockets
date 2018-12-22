@@ -225,13 +225,14 @@
     let socket = io();
     let canvas1, ctx1, canvas2, ctx2;
     let progress = document.querySelector('progress')
-    let GAME_DONE = true
+    let GAME_DONE = false
 
     socket.on('drawing', onDrawingEvent);
     socket.on('whatToDraw', (data) => {
       gameStarting()
       clearDisplayVotes()
       updateRoundsLeft(data)
+      updateUsersInGame(data)
       document.querySelector('.drawwhat').innerHTML = `<div>${data.whatToDraw.en}</div><div>${data.whatToDraw.es}</div>`
       progress.value = 100;
       updateProgressBar(data)
@@ -274,6 +275,7 @@
 
     socket.on('user joined', function (data) {
       updateUsers(data)
+      updateUsersInGame(data)
     });
 
 
@@ -282,6 +284,15 @@
       document.querySelector('.where').classList.add('is-hidden')
       document.querySelector('.players').classList.add('is-hidden')
       document.querySelector('section.hero').classList.remove('is-hidden')
+    }
+
+    function updateUsersInGame(data) {
+      if (data.numUsers)
+        document.querySelector('.numUsers').innerHTML = `
+                <div>
+                    <p class="heading">Players</p>
+                    <p class="title">${data.numUsers}</p>
+                </div> `;
     }
 
     function updateUsers(data) {
