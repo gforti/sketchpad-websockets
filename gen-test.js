@@ -1,6 +1,6 @@
-var adjectives = require('./adjectives')
-var nouns = require('./nouns')
-var verbs = require('./verbs')
+let adjectives = require('./adjectives')
+let nouns = require('./nouns')
+let verbs = require('./verbs')
 
 function coinFlip() {
     return (Math.floor(Math.random() * 2) == 0);
@@ -19,7 +19,7 @@ function generateDraws() {
         } else {
             console.log(`Draw a ${nouns[randNoun2]} that is going to ${verbs[randVerb]}`)
         }
-        
+
     }
 }
 

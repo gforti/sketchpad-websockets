@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TODO supply a title</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel='stylesheet' href='bulma.css' />
+  <style>
+    /* Some CSS styling */
+
+    #sketchpadapp {
+      /* Prevent nearby text being highlighted when accidentally dragging mouse outside confines of the canvas */
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    .leftside {
+      float: left;
+      width: 220px;
+      height: 285px;
+      background-color: #def;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .rightside {
+      float: left;
+      margin-left: 10px;
+    }
+
+    #sketchpad {
+      float: left;
+      height: 300px;
+      width: 400px;
+      border: 2px solid #888;
+      border-radius: 4px;
+      position: relative;
+      /* Necessary for correct mouse co-ords in Firefox */
+    }
+
+    #clearbutton {
+      font-size: 15px;
+      padding: 10px;
+      -webkit-appearance: none;
+      background: #eee;
+      border: 1px solid #888;
+    }
+
+
+    .where h1 {
+      letter-spacing: 0.1rem;
+      font-weight: bold;
+    }
+
+    .where {
+      position: fixed;
+      top: 0;
+      background: #a90e0e;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+      padding: 1rem;
+      font-size: 3rem;
+    }
+
+    .players {
+      background-color: #a90e0e;
+      position: fixed;
+      top: 0;
+      width: 100px;
+      color: white;
+      text-align: center;
+      padding: 0.4rem
+    }
+
+    .players .title {
+      color: white;
+    }
+
+    .Aligner {
+      display: flex;
+      white-space: nowrap;
+    }
+
+    .Aligner-item {
+      max-width: 100%;
+      max-height: 30px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-left: 0.1rem;
+    }
+
+
+    .level {
+      font-weight: bold;
+      background-image: linear-gradient(141deg, #ff0561 0%, #ff3860 71%, #ff5257 100%);
+      margin: 0 !important;
+      padding: 1rem;
+    }
+
+
+    .hero.is-light .level .title {
+      color: white;
+    }
+
+    .login {
+      text-align: center;
+    }
+
+    .game {
+      margin-top: 0.6rem;
+    }
+
+    .sketch,
+    .voting {
+      text-align: center;
+    }
+
+    .intro {
+      background-color: #009e6c;
+      color: whitesmoke;
+    }
+
+
+    @keyframes color_change {
+      from {
+        color: red;
+      }
+      to {
+        color: gold;
+      }
+    }
+
+    .txt {
+      font-size: 5.2vw;
+      font-weight: bold;
+      color: gold;
+      text-shadow: 0.2vw 0.2vw 10px #000;
+      animation: color_change 1s infinite alternate;
+    }
+
+    canvas {
+      border: 2px solid #888;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="where">
+    <h1></h1>
+  </div>
+  <div class="players"></div>
+
+  <section class="section is-large intro">
+    <div class="container has-text-centered">
+
+      <h1 class="title txt">Draw in 60 Seconds</h1>
+      <h1 class="title txt">Dibuje en 60 segundos</h1>
+      <button class="roundstart button is-success is-large">Start</button>
+
+    </div>
+  </section>
+
+  <section class="hero is-light is-fullheight is-hidden">
+    <div class="hero-head">
+      <nav class="level is-mobile">
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Location</p>
+            <p class="title where2"></p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered leader"></div>
+        <div class="level-item has-text-centered numUsers"></div>
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Rounds</p>
+            <p class="title remain">?</p>
+          </div>
+        </div>
+      </nav>
+
+      <div class="game">
+        <progress class="progress is-large is-info" value="100" max="100"></progress>
+
+        <div class="container has-text-centered">
+          <h1 class="drawwhat title is-1"></h1>
+        </div>
+        <div id="sketchpadapp" class="columns">
+          <div class="column">
+            <div class="box has-text-centered">
+              <div>
+                <p class="title player1Reveal"></p>
+                <p class="title player1Votes"></p>
+              </div>
+              <h1 class="title">Player 1</h1>
+              <canvas id="sketchpad1" width="300" height="200"></canvas>
+            </div>
+          </div>
+          <div class="column">
+            <div class="box has-text-centered">
+              <div>
+                <p class="title player2Reveal"></p>
+                <p class="title player2Votes"></p>
+              </div>
+              <h1 class="title">Player 2</h1>
+              <canvas id="sketchpad2" width="300" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script type="text/javascript">
+    let socket = io();
+    let canvas1, ctx1, canvas2, ctx2;
+    let progress = document.querySelector('progress')
+    let GAME_DONE = true
+
+    socket.on('drawing', onDrawingEvent);
+    socket.on('whatToDraw', (data) => {
+      gameStarting()
+      clearDisplayVotes()
+      updateRoundsLeft(data)
+      document.querySelector('.drawwhat').innerHTML = `<div>${data.whatToDraw.en}</div><div>${data.whatToDraw.es}</div>`
+      progress.value = 100;
+      updateProgressBar(data)
+    });
+
+    socket.on('votenow', (data) => {
+      document.querySelector('.drawwhat').innerHTML = "Vote Now! / ¡Vota Ahora!"
+      progress.value = 100;
+      updateProgressBar(data)
+    });
+
+    socket.on('rounddone', (data) => {
+      document.querySelector('.drawwhat').innerHTML = `Round over <br /> Winner / Ganadora: ${data.playerwinner}`
+      progress.value = 100;
+      updateProgressBar(data)
+      displayVotes(data)
+    });
+
+
+    socket.on('gamedone', (data) => {
+      GAME_DONE = true
+      document.querySelector('#sketchpadapp').classList.add('is-hidden')
+      playTrack()
+      winners = data && data.length > 0 ? data.join(', ') : data && data.length ? data[0] : 'unknown'
+      document.querySelector('.drawwhat').innerHTML = `Game over. <br /> Winners: ${winners}`
+
+    });
+
+    socket.on('host-game-info', function (data) {
+
+      document.querySelector('.where h1').innerHTML = data.gameUrl
+      document.querySelector('.where2').innerHTML = data.gameUrl
+      updateUsers(data)
+
+      if (data.gameInProgress) {
+        gameStarting()
+      }
+
+    });
+
+    socket.on('user joined', function (data) {
+      updateUsers(data)
+    });
+
+
+    function gameStarting() {
+      document.querySelector('.intro').classList.add('is-hidden')
+      document.querySelector('.where').classList.add('is-hidden')
+      document.querySelector('.players').classList.add('is-hidden')
+      document.querySelector('section.hero').classList.remove('is-hidden')
+    }
+
+    function updateUsers(data) {
+      document.querySelector('.players').innerHTML = ` <div>
+                            <p class="heading">Total<br />Players</p>
+                            <p class="title is-light">${data.numUsers}</p>
+                        </div>
+
+                        ${Object.keys(data.players).map(id => `
+                        <div class="Aligner">
+                            <div class="Aligner-item">
+                                ${data.players[id].username}
+                            </div>
+                        </div>
+                        `).join('')}
+            `
+    }
+
+
+    window.addEventListener('load', () => {
+      init()
+      socket.emit('host');
+    })
+
+
+    function updateRoundsLeft(data) {
+      document.querySelector('.remain').innerHTML = data.roundsLeft
+    }
+
+    function displayVotes(data) {
+      document.querySelector('.player1Reveal').innerHTML = data.playerName1
+      document.querySelector('.player2Reveal').innerHTML = data.playerName2
+      document.querySelector('.player1Votes').innerHTML = data.player1Votes
+      document.querySelector('.player2Votes').innerHTML = data.player2Votes
+    }
+
+    function clearDisplayVotes() {
+      document.querySelector('.player1Reveal').innerHTML = ''
+      document.querySelector('.player2Reveal').innerHTML = ''
+      document.querySelector('.player1Votes').innerHTML = ''
+      document.querySelector('.player2Votes').innerHTML = ''
+    }
+
+    function updateProgressBar(data) {
+
+      let now = new Date().getTime();
+      let pct = Math.floor(100 * (data.endTime - now) / data.totalTime);
+      if (pct < 2 || isNaN(pct)) {
+        pct = 0;
+      }
+      progress.value = pct;
+      if (pct < 20) {
+        progress.classList.remove('is-info')
+        progress.classList.add('is-danger');
+
+      }
+      if (pct < 1) {
+        // if 0 or negative, no need to update again.
+        progress.classList.remove('is-danger')
+        progress.classList.add('is-info');
+        return;
+      }
+
+
+      setTimeout(updateProgressBar.bind(this, data), 100);
+
+    }
+
+
+    function onDrawingEvent(data) {
+
+      document.querySelector('.drawwhat').innerHTML = `<div>${data.whatToDraw.en}</div><div>${data.whatToDraw.es}</div>`
+
+      if (data.data.clear) {
+        clearCanvas(data)
+        return
+      }
+
+      if (data.player1 === data.data.userid) {
+        ctx1.beginPath();
+        ctx1.moveTo(data.data.current.x0, data.data.current.y0);
+        ctx1.lineTo(data.data.current.x1, data.data.current.y1);
+        ctx1.strokeStyle = data.data.current.color;
+        ctx1.lineWidth = data.data.current.lineWidth;
+        ctx1.lineJoin = ctx1.lineCap = 'round';
+        ctx1.stroke();
+
+        ctx1.closePath();
+
+      }
+
+      if (data.player2 === data.data.userid) {
+        ctx2.beginPath();
+        ctx2.moveTo(data.data.current.x0, data.data.current.y0);
+        ctx2.lineTo(data.data.current.x1, data.data.current.y1);
+        ctx2.strokeStyle = data.data.current.color;
+        ctx2.lineWidth = data.data.current.lineWidth;
+        ctx2.lineJoin = ctx2.lineCap = 'round';
+        ctx2.stroke();
+
+        ctx2.closePath();
+      }
+    }
+
+
+    function clearCanvas(data) {
+      if (data.player1 === data.data.userid) {
+        ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+      }
+      if (data.player2 === data.data.userid) {
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+      }
+    }
+
+
+    function init() {
+      // Get the specific canvas element from the HTML document
+      canvas1 = document.querySelector('#sketchpad1');
+      canvas2 = document.querySelector('#sketchpad2');
+
+      // If the browser supports the canvas tag, get the 2d drawing context for this canvas
+      ctx1 = canvas1.getContext('2d');
+      ctx2 = canvas2.getContext('2d');
+
+    }
+
+    document.querySelector('.roundstart').addEventListener('click', () => {
+      socket.emit('start')
+
+    })
+
+
+    let winnerTrack = new Audio(`tracks/winner.mp3`)
+    let tracks = [];
+    for (let i = 1; i < 9; i++)
+      tracks.push(new Audio(`tracks/epic${i}.mp3`));
+
+    tracks.sort(() => { return 0.5 - Math.random() });
+
+    let currentTrack = 0;
+    let allTracks = x = tracks.length;
+
+    while (x--) {
+      tracks[x].addEventListener('ended', playNextTrack);
+    }
+
+    function stopTrack() {
+      tracks[currentTrack].pause();
+    }
+
+    function playTrack() {
+      if (!GAME_DONE) {
+        tracks[currentTrack].play()
+      } else {
+        stopTrack()
+        winnerTrack.play()
+      }
+    }
+
+    function playNextTrack() {
+      currentTrack = (currentTrack + 1) % allTracks;
+      playTrack();
+    }
+
+    document.addEventListener('click', playTrack)
+
+
+  </script>
+</body>
+
+</html>

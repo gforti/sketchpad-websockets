@@ -1,6 +1,6 @@
 # Draw in 60 seconds WebSockets
 
-This is a Christmas drawing game that uses websockets.  The idea is that the host will display what to draw two random players 
+This is a Christmas drawing game that uses websocket.  The idea is that the host will display what to draw two random players 
 will use their device to compete and draw for the votes of the other players.
 
 **Note** that each device runs javascript faster or slower so there can be a delay between drawing as they show up.
