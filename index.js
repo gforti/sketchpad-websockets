@@ -197,6 +197,7 @@ function getNextPlayers() {
   console.log('registredPlayers.length', registredPlayers.length)
   console.log('registredPlayers', registredPlayers)
   console.log('players', players)
+  // need to work on correctly allowing players to reconnect back to the state they were in
 
   if (registredPlayers.length === 1) {
     let playerShuffle = shuffle(Object.keys(players).filter(id => registredPlayers[0] !== id))
